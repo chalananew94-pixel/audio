@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loading…</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--accent:#a855f7;--accent2:#6366f1;--bg:#050510;--surface:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.1);--text:#f0f0ff;--muted:#9090bb;--green:#22c55e;--yellow:#eab308;--blue:#3b82f6}
+html,body{min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 10% 0%,rgba(168,85,247,.22),transparent),
+             radial-gradient(ellipse 70% 50% at 90% 20%,rgba(99,102,241,.18),transparent),
+             radial-gradient(ellipse 60% 70% at 50% 100%,rgba(168,85,247,.08),transparent)}
+body>*{position:relative;z-index:1}
+
+/* NAV */
+.topnav{display:flex;align-items:center;justify-content:center;padding:16px 24px;
+  border-bottom:1px solid rgba(255,255,255,.06);background:rgba(5,5,16,.6);backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:50}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-logo{height:32px;border-radius:8px;object-fit:contain}
+.nav-name{font-size:18px;font-weight:700;background:linear-gradient(135deg,#a855f7,#6366f1);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* WRAP */
+.page-wrap{max-width:640px;margin:0 auto;padding:32px 16px 80px}
+
+/* HERO IMAGE */
+.hero-img-wrap{width:100%;border-radius:20px;overflow:hidden;margin-bottom:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(168,85,247,.15)}
+.hero-img-wrap img{width:100%;max-height:340px;object-fit:cover;display:block}
+
+/* TITLE */
+.page-title{font-size:clamp(20px,4vw,28px);font-weight:800;text-align:center;margin-bottom:28px;line-height:1.3}
+
+/* PROGRESS */
+.progress-track{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px}
+.prog-step{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px}
+.prog-dot{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--muted);transition:all .4s}
+.prog-dot.active{border-color:var(--accent);background:rgba(168,85,247,.2);color:var(--accent)}
+.prog-dot.done{border-color:var(--green);background:rgba(34,197,94,.2);color:var(--green)}
+.prog-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;transition:color .4s}
+.prog-label.active{color:var(--accent)}
+.prog-label.done{color:var(--green)}
+.prog-line{width:48px;height:2px;background:rgba(255,255,255,.08);margin-bottom:22px;flex-shrink:0;transition:background .4s}
+.prog-line.done{background:linear-gradient(90deg,var(--green),var(--accent))}
+
+/* STEP CARDS */
+.step-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:28px;margin-bottom:16px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transition:border-color .3s,box-shadow .3s;position:relative;overflow:hidden}
+.step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(168,85,247,.4),transparent);
+  opacity:0;transition:opacity .3s}
+.step-card.active-card{border-color:rgba(168,85,247,.3);box-shadow:0 0 40px rgba(168,85,247,.1)}
+.step-card.active-card::before{opacity:1}
+.step-card.done-card{border-color:rgba(34,197,94,.25);box-shadow:0 0 30px rgba(34,197,94,.08)}
+.step-card.locked-card{opacity:.6}
+
+.step-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.step-badge{display:flex;align-items:center;gap:10px}
+.step-num{background:linear-gradient(135deg,#a855f7,#6366f1);border-radius:10px;
+  padding:5px 12px;font-size:12px;font-weight:800;letter-spacing:1px;color:#fff}
+.step-title{font-size:16px;font-weight:700}
+.step-status{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;letter-spacing:.3px}
+.status-locked{background:rgba(255,255,255,.06);color:var(--muted)}
+.status-active{background:rgba(168,85,247,.15);color:var(--accent)}
+.status-counting{background:rgba(234,179,8,.15);color:var(--yellow)}
+.status-done{background:rgba(34,197,94,.15);color:var(--green)}
+
+.step-desc{font-size:13.5px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+
+/* STEP BUTTONS */
+.step-btn{width:100%;padding:16px 20px;border-radius:14px;border:none;font-size:15px;
+  font-weight:700;cursor:pointer;transition:all .25s;letter-spacing:.3px;
+  display:flex;align-items:center;justify-content:center;gap:10px}
+.step-btn.btn-locked{background:rgba(255,255,255,.07);color:rgba(255,255,255,.35);cursor:not-allowed}
+.step-btn.btn-ready{background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;
+  box-shadow:0 8px 30px rgba(168,85,247,.35)}
+.step-btn.btn-ready:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(168,85,247,.45)}
+.step-btn.btn-counting{background:linear-gradient(135deg,#ca8a04,#eab308);color:#1a1000;cursor:not-allowed;
+  box-shadow:0 8px 30px rgba(234,179,8,.3);animation:pulse-yellow 1s ease infinite}
+@keyframes pulse-yellow{0%,100%{box-shadow:0 8px 30px rgba(234,179,8,.3)}50%{box-shadow:0 8px 40px rgba(234,179,8,.55)}}
+.step-btn.btn-verified{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;cursor:default;
+  box-shadow:0 8px 30px rgba(34,197,94,.3)}
+
+/* VERIFIED ANIMATION */
+.verified-anim{display:none;flex-direction:column;align-items:center;gap:8px;padding:12px 0;text-align:center}
+.verified-anim.show{display:flex;animation:bounceIn .5s cubic-bezier(.36,.07,.19,.97)}
+@keyframes bounceIn{0%{opacity:0;transform:scale(.7)}60%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+.check-circle{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#22c55e);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 0 30px rgba(34,197,94,.4),0 0 60px rgba(34,197,94,.15)}
+.verified-text{font-size:14px;font-weight:700;color:var(--green)}
+.verified-sub{font-size:12px;color:var(--muted)}
+
+/* GET LINK */
+.getlink-wrap{margin-top:24px;text-align:center;opacity:0;transform:translateY(20px);
+  transition:opacity .5s ease,transform .5s ease;pointer-events:none}
+.getlink-wrap.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+.getlink-btn{display:inline-flex;align-items:center;gap:12px;padding:18px 40px;
+  border-radius:16px;border:none;cursor:pointer;font-size:17px;font-weight:800;
+  background:linear-gradient(135deg,#3b82f6,#a855f7);color:#fff;letter-spacing:.3px;
+  box-shadow:0 12px 40px rgba(99,102,241,.4);transition:all .25s;width:100%;justify-content:center}
+.getlink-btn:hover{transform:translateY(-3px);box-shadow:0 18px 50px rgba(99,102,241,.55)}
+.getlink-btn:active{transform:translateY(-1px)}
+.getlink-glow{animation:glow-pulse 2s ease infinite}
+@keyframes glow-pulse{0%,100%{box-shadow:0 12px 40px rgba(99,102,241,.4)}50%{box-shadow:0 12px 60px rgba(99,102,241,.65),0 0 80px rgba(168,85,247,.2)}}
+
+/* LOADING / ERROR */
+.center-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;gap:16px;text-align:center;padding:40px}
+.spinner{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.08);
+  border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-icon{font-size:52px;margin-bottom:4px}
+.error-title{font-size:22px;font-weight:800;color:#fca5a5}
+.error-msg{font-size:14px;color:var(--muted);max-width:300px}
+.home-link{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:10px 20px;
+  border-radius:10px;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--text);
+  text-decoration:none;font-size:14px;font-weight:500;transition:background .2s}
+.home-link:hover{background:rgba(255,255,255,.12)}
+
+/* FOOTER */
+footer{text-align:center;padding:24px;color:rgba(255,255,255,.25);font-size:12px;
+  border-top:1px solid rgba(255,255,255,.05);position:relative;z-index:1}
+
+/* CONFETTI */
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:9999;
+  animation:confetti-fall linear forwards}
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+@media(max-width:480px){
+  .page-wrap{padding:20px 12px 60px}
+  .step-card{padding:20px}
+  .getlink-btn{font-size:15px;padding:16px 24px}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-brand">
+    <img id="nav-logo" class="nav-logo" src="" alt="" style="display:none">
+    <span class="nav-name" id="nav-name">LinkGen</span>
+  </div>
+</nav>
+
+<div id="loading" class="center-state">
+  <div class="spinner"></div>
+  <p style="color:var(--muted)">Loading your link…</p>
+</div>
+
+<div id="error-state" class="center-state" style="display:none">
+  <div class="error-icon">🔗</div>
+  <div class="error-title" id="err-title">Link Not Found</div>
+  <div class="error-msg" id="err-msg">This link does not exist or has been disabled.</div>
+  <a href="/" class="home-link">← Go Home</a>
+</div>
+
+<div id="content" style="display:none">
+  <div class="page-wrap">
+
+    <div class="hero-img-wrap" id="hero-wrap" style="display:none">
+      <img id="hero-img" src="" alt="">
+    </div>
+
+    <h1 class="page-title" id="page-title"></h1>
+
+    <!-- Progress -->
+    <div class="progress-track">
+      <div class="prog-step">
+        <div class="prog-dot active" id="prog-1">1</div>
+        <div class="prog-label active" id="prog-lbl-1">Step 1</div>
+      </div>
+      <div class="prog-line" id="prog-line-1"></div>
+      <div class="prog-step">
+        <div class="prog-dot" id="prog-2">2</div>
+        <div class="prog-label" id="prog-lbl-2">Step 2</div>
+      </div>
+      <div class="prog-line" id="prog-line-2"></div>
+      <div class="prog-step">
+        <div class="prog-dot" id="prog-3">🔗</div>
+        <div class="prog-label" id="prog-lbl-3">Get Link</div>
+      </div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="step-card" id="card-1">
+      <div class="step-header">
+        <div class="step-badge">
+          <div class="step-num">STEP 1</div>
+          <div class="step-title">First Verification</div>
+        </div>
+        <div class="step-status status-active" id="status-1">Ready</div>
+      </div>
+      <div class="step-desc">Click Unlock to open the first verification link. Wait for the 5-second timer to complete.</div>
+      <div class="verified-anim" id="vanim-1">
+        <div class="check-circle">✓</div>
+        <div class="verified-text">Step 1 Verified!</div>
+        <div class="verified-sub">Proceed to Step 2</div>
+      </div>
+      <button class="step-btn btn-ready" id="btn-1" onclick="startStep(1)">🔓 UNLOCK</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card locked-card" id="card-2">
+      <div class="step-header">
+        <div class="step-badge">
+          <div class="step-num">STEP 2</div>
+          <div class="step-title">Second Verification</div>
+        </div>
+        <div class="step-status status-locked" id="status-2">Locked</div>
+      </div>
+      <div class="step-desc">Complete Step 1 first, then unlock Step 2 to continue your verification.</div>
+      <div class="verified-anim" id="vanim-2">
+        <div class="check-circle">✓</div>
+        <div class="verified-text">Step 2 Verified!</div>
+        <div class="verified-sub">Your link is ready!</div>
+      </div>
+      <button class="step-btn btn-locked" id="btn-2" disabled onclick="startStep(2)">🔒 LOCKED</button>
+    </div>
+
+    <!-- Get Link -->
+    <div class="getlink-wrap" id="getlink-wrap">
+      <button class="getlink-btn getlink-glow" onclick="openDestination()">🔗 GET LINK</button>
+    </div>
+
+  </div>
+</div>
+
+<footer><span id="footer-text">© 2024 LinkGen</span></footer>
+
+<script>
+const shortId = location.pathname.replace('/go/', '').toUpperCase();
+const stKey   = 'vfy_' + shortId;
+let linkData  = null;
+
+// Restore session state
+let vState = JSON.parse(sessionStorage.getItem(stKey) || '{"s1":false,"s2":false}');
+
+async function init() {
+  try {
+    const [linkRes, settRes] = await Promise.all([
+      fetch('/api/go/' + shortId),
+      fetch('/api/settings')
+    ]);
+    const settings = await settRes.json();
+    applySettings(settings);
+
+    if (!linkRes.ok) {
+      const err = await linkRes.json();
+      showError(linkRes.status === 410 ? 'Link Disabled' : 'Link Not Found', err.error || 'This link is unavailable.');
+      return;
+    }
+
+    linkData = await linkRes.json();
+    fetch('/api/go/' + shortId + '/view', { method: 'POST' }).catch(() => {});
+    renderPage();
+  } catch (e) {
+    showError('Error', 'Failed to load. Please try again.');
+  }
+}
+
+function applySettings(s) {
+  document.title = (s.site_name || 'LinkGen');
+  document.getElementById('nav-name').textContent = s.site_name || 'LinkGen';
+  document.getElementById('footer-text').textContent = s.footer_text || '© 2024 LinkGen';
+  if (s.logo) { const i = document.getElementById('nav-logo'); i.src = s.logo; i.style.height = Math.min(s.logo_size || 48, 36) + 'px'; i.style.display = 'inline-block'; }
+  if (s.favicon) { const l = document.createElement('link'); l.rel = 'icon'; l.href = s.favicon; document.head.appendChild(l); }
+  if (s.primary_color) document.documentElement.style.setProperty('--accent', s.primary_color);
+  if (s.bg_color) { document.body.style.background = s.bg_color; document.documentElement.style.setProperty('--bg', s.bg_color); }
+}
+
+function renderPage() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  if (linkData.image) {
+    document.getElementById('hero-img').src = linkData.image;
+    document.getElementById('hero-wrap').style.display = 'block';
+  }
+  const title = linkData.title || '';
+  const titleEl = document.getElementById('page-title');
+  titleEl.textContent = title;
+  titleEl.style.display = title ? 'block' : 'none';
+  document.title = title || 'Verify Link';
+
+  // Restore completed steps from sessionStorage
+  if (vState.s1) markVerified(1, false);
+  if (vState.s2) markVerified(2, false);
+}
+
+function showError(title, msg) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('err-title').textContent = title;
+  document.getElementById('err-msg').textContent = msg;
+  document.getElementById('error-state').style.display = 'flex';
+}
+
+// ── Step logic ────────────────────────────────────────────────────────────────
+function startStep(n) {
+  if (n === 1 && vState.s1) return;
+  if (n === 2 && vState.s2) return;
+  if (n === 2 && !vState.s1) return;
+
+  const adUrl = n === 1 ? linkData.ad1_url : linkData.ad2_url;
+  window.open(adUrl, '_blank');
+
+  const btn = document.getElementById('btn-' + n);
+  let count = 5;
+  btn.className = 'step-btn btn-counting';
+  btn.textContent = '⏳ CONTINUE ' + count + 's';
+  btn.disabled = true;
+  document.getElementById('status-' + n).textContent = 'Verifying…';
+  document.getElementById('status-' + n).className = 'step-status status-counting';
+
+  const timer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      btn.textContent = '⏳ CONTINUE ' + count + 's';
+    } else {
+      clearInterval(timer);
+      vState['s' + n] = true;
+      sessionStorage.setItem(stKey, JSON.stringify(vState));
+      markVerified(n, true);
+    }
+  }, 1000);
+}
+
+function markVerified(n, animate) {
+  const btn    = document.getElementById('btn-' + n);
+  const card   = document.getElementById('card-' + n);
+  const status = document.getElementById('status-' + n);
+  const vanim  = document.getElementById('vanim-' + n);
+  const prog   = document.getElementById('prog-' + n);
+  const lbl    = document.getElementById('prog-lbl-' + n);
+
+  btn.className = 'step-btn btn-verified';
+  btn.textContent = '✓ VERIFIED';
+  btn.disabled = true;
+  card.classList.remove('active-card', 'locked-card');
+  card.classList.add('done-card');
+  status.textContent = 'Verified ✓';
+  status.className = 'step-status status-done';
+  prog.className = 'prog-dot done';
+  prog.textContent = '✓';
+  lbl.className = 'prog-label done';
+
+  if (animate) {
+    vanim.classList.add('show');
+    spawnConfetti();
+  } else {
+    vanim.style.display = 'flex';
+  }
+
+  if (n === 1) {
+    unlockStep2();
+    document.getElementById('prog-line-1').classList.add('done');
+  }
+  if (n === 2) {
+    showGetLink();
+    document.getElementById('prog-line-2').classList.add('done');
+    document.getElementById('prog-3').className = 'prog-dot active';
+    document.getElementById('prog-lbl-3').className = 'prog-label active';
+  }
+}
+
+function unlockStep2() {
+  const card = document.getElementById('card-2');
+  const btn  = document.getElementById('btn-2');
+  const st   = document.getElementById('status-2');
+  card.classList.remove('locked-card');
+  card.classList.add('active-card');
+  btn.className = 'step-btn btn-ready';
+  btn.textContent = '🔓 UNLOCK';
+  btn.disabled = false;
+  st.textContent = 'Ready';
+  st.className = 'step-status status-active';
+  document.getElementById('prog-2').className = 'prog-dot active';
+  document.getElementById('prog-lbl-2').className = 'prog-label active';
+  // smooth scroll to step 2
+  setTimeout(() => document.getElementById('card-2').scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+}
+
+function showGetLink() {
+  const wrap = document.getElementById('getlink-wrap');
+  wrap.classList.add('visible');
+  setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+}
+
+function openDestination() {
+  if (linkData?.dest_url) window.open(linkData.dest_url, '_blank');
+}
+
+// ── Confetti ──────────────────────────────────────────────────────────────────
+function spawnConfetti() {
+  const colors = ['#a855f7','#6366f1','#22c55e','#eab308','#ec4899','#3b82f6'];
+  for (let i = 0; i < 40; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `left:${Math.random()*100}vw;top:0;background:${colors[i%colors.length]};
+        animation-duration:${1.5+Math.random()}s;animation-delay:${Math.random()*.3}s;
+        transform:rotate(${Math.random()*360}deg);width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;
+        border-radius:${Math.random()>0.5?'50%':'3px'}`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2500);
+    }, i * 30);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
